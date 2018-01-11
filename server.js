@@ -6,6 +6,7 @@ var mysql = require('mysql');
 var request = require('request');
 var colors = require('colors');
 var path = require('path');
+var bcrypt = require('bcrypt');
 // Express
 var app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -39,14 +40,28 @@ app.post('/signin', function(req, res){
 	con.query("SELECT * FROM users where email='" + email + "'", function (err, result, fields) {
     if (err) throw err;
     if (result.length > 0){
-    	if (password = result[0].password){
-    		res.json({message: 'data from database!'});
+    	//comparing hashed password
+    	bcrypt.compare(password, result[0].password, function(err, bol){
+    		if(err){
+    			console.log('wrong with comparing password!');
+    			throw err;
+    		}
+    		if(bol){
+    			res.json({message: 'data from database!'});
+    		} else {
+    			res.json({err: 'Password not correct!'});
+    		}
 
-    	} else{
-    		res.json({err: 'email or password not correct!'});
-    	}
+    	})
+
+    	// if (password = result[0].password){
+    	// 	res.json({message: 'data from database!'});
+
+    	// } else{
+    	// 	res.json({err: 'Password not correct!'});
+    	// }
     } else{
-    	res.json({err: 'email or password not correct!'});
+    	res.json({err: 'User doesn\'nt exist!'});
     }
     });
 });
@@ -64,10 +79,19 @@ app.post('/signup', function(req, res){
 	con.query("SELECT * FROM users where email='" + email + "'", function (err, result, fields) {
     if (err) throw err;
     if (result.length == 0){
-    	con.query("insert into users values (null, '" + firstName + "', '"+ familyName + "', '"+ email + "', " + phone + ",'"+ password + "')", function(err, result, fields){
-    		if(err) throw err;
-    		res.json({message: 'user created!'});
-    	})
+    	//hashing password
+    	bcrypt.hash(password, 5, function(err, hash) {
+    		if(err){
+    			console.log('wrong with hashing password!');
+    			throw err;
+    		}
+    		console.log(hash);
+    		password = hash;
+    		con.query("insert into users values (null, '" + firstName + "', '"+ familyName + "', '"+ email + "', " + phone + ",'"+ password + "')", function(err, result, fields){
+    			if(err) throw err;
+    			res.json({message: 'user created!'});
+    		})
+  		});
     } else{
     	res.json({err: 'email is taken!'});
     }
