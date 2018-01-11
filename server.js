@@ -7,6 +7,7 @@ var request = require('request');
 var colors = require('colors');
 var path = require('path');
 var bcrypt = require('bcrypt');
+var Bittrex = require('bittrex-wrapper');
 // Express
 var app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -32,6 +33,18 @@ request('https://bittrex.com/api/v1.1/public/getmarkets', { json: true }, (err, 
   if (err) { return console.log(err); }
   console.log(body.result[0]);
 });	
+
+//Calling bittrex api
+var bittrex = new Bittrex('b3eb270f967c4acabc841d3b7fb07143', 'df1d98b8b01a4ef0a091eaf1875f28b5');
+bittrex.publicGetTicker('BTC-LTC').then((response) => {
+  console.log(response);
+}).catch((error) => {
+  console.log(error);
+});
+
+var __apiKey = 'b3eb270f967c4acabc841d3b7fb07143';
+var __apiSecret = 'df1d98b8b01a4ef0a091eaf1875f28b5';
+console.log("result of get account balance".red + bittrex.accountGetBalances());
 
 // Routes
 app.post('/signin', function(req, res){	
